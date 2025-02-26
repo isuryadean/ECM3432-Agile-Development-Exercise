@@ -3,36 +3,172 @@
 {% block title %}Submit a Complaint{% endblock %}
 
 {% block content %}
-    <div class="container mt-4">
-        <h2>Submit a Complaint</h2>
-        <p>Please fill out the form below to submit a complaint to the council.</p>
+<div class="container mt-4">
+    <h2>Submit a Complaint</h2>
+    <p>Please fill out the form below to submit a complaint to the council.</p>
 
-        <form method="POST">
-            {% csrf_token %}
-            {{ form.as_p }}
+    <form method="POST" class="needs-validation" novalidate>
+        {% csrf_token %}
 
-            <button type="button" class="btn btn-secondary" onclick="getLocation()">Use My Location</button>
+        <div class="mb-3">
+            <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+            {{ form.name }}
+        </div>
 
-            <button type="submit" class="btn btn-primary">Submit Complaint</button>
-        </form>
+        <div class="mb-3">
+            <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+            {{ form.email }}
+        </div>
 
-        {% if success %}
-        <div class="alert alert-success mt-3">Your complaint has been submitted successfully!</div>
-        {% endif %}
-    </div>
+        <div class="mb-3">
+            <label for="{{ form.telephone.id_for_label }}" class="form-label">Telephone</label>
+            {{ form.telephone }}
+        </div>
 
-    <script>
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(setLocation);
-            } else {
-                alert("Geolocation is not supported by this browser.");
-            }
+        <div class="mb-3">
+            <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+            {{ form.category }}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.subcategory.id_for_label }}" class="form-label">Subcategory</label>
+            {{ form.subcategory }}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.issue_description.id_for_label }}" class="form-label">Issue Description</label>
+            {{ form.issue_description }}
+        </div>
+
+        <button type="button" class="btn btn-secondary mb-3" onclick="getLocation()">Use My Location</button>
+
+        <!-- Map Container -->
+        <div id="map" style="height: 400px; width: 100%;" class="mb-3"></div>
+
+        <div class="mb-3">
+            <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
+            {{ form.location }}
+        </div>
+
+        <!-- Hidden fields for latitude & longitude -->
+        {{ form.latitude }}
+        {{ form.longitude }}
+
+        <button type="submit" class="btn btn-primary">Submit Complaint</button>
+    </form>
+</div>
+
+<!-- Leaflet.js for OpenStreetMap -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- JavaScript for Dynamic Subcategories -->
+<script>
+
+    const subcategories = {{ subcategories|safe }};
+
+    document.getElementById("category").addEventListener("change", function() {
+        const category = this.value;
+        const subcategorySelect = document.getElementById("subcategory");
+
+        subcategorySelect.innerHTML = "";
+
+        if (category === "other") {
+            subcategorySelect.innerHTML = '<option value="other">Other</option>';
+        } else if (subcategories[category]) {
+            subcategories[category].forEach(sub => {
+                let option = document.createElement("option");
+                option.value = sub[0];
+                option.textContent = sub[1];
+                subcategorySelect.appendChild(option);
+            });
+        }
+    });
+
+    var map = L.map('map').setView([51.505, -0.09], 13); // Default center (London)
+    
+    // Load OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marker;
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(setLocation, showError);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    function setLocation(position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+        
+        document.getElementById("id_latitude").value = latitude;
+        document.getElementById("id_longitude").value = longitude;
+
+        console.log(typeof(latitude))
+        console.log(latitude)
+        
+        latitude = Number(latitude.toFixed(5))
+        longitude = Number(longitude.toFixed(5))
+
+        console.log(typeof(latitude))
+        console.log(latitude)
+
+        if (marker) {
+            map.removeLayer(marker);
         }
 
-        function setLocation(position) {
-            document.getElementById("id_latitude").value = position.coords.latitude;
-            document.getElementById("id_longitude").value = position.coords.longitude;
+        marker = L.marker([latitude, longitude]).addTo(map)
+            .bindPopup("Your Location")
+            .openPopup();
+
+        map.setView([latitude, longitude], 15);
+
+        // Reverse Geocode to Get Address
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("id_location").value = data.display_name;
+            })
+            .catch(error => console.log(error));
+    }
+
+    function showError(error) {
+        alert("Unable to retrieve location.");
+    }
+
+    // Allow users to select a location on the map manually
+    map.on('click', function(e) {
+        var latitude = e.latlng.lat;
+        var longitude = e.latlng.lng;
+
+        document.getElementById("id_latitude").value = latitude;
+        document.getElementById("id_longitude").value = longitude;
+
+        if (marker) {
+            map.removeLayer(marker);
         }
-    </script>
+
+        marker = L.marker([latitude, longitude]).addTo(map)
+            .bindPopup("Selected Location")
+            .openPopup();
+
+        // Reverse Geocode to Get Address
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("id_location").value = data.display_name;
+            })
+            .catch(error => console.log(error));
+    });
+
+    
+
+    
+</script>
+
 {% endblock %}
