@@ -1,5 +1,6 @@
 from django import forms
 from .models import SubmittedIssue
+from django.contrib.auth.forms import AuthenticationForm
 
 class ComplaintForm(forms.ModelForm):
     class Meta:
@@ -16,3 +17,7 @@ class ComplaintForm(forms.ModelForm):
             'latitude': forms.HiddenInput(),
             'longitude': forms.HiddenInput(),
         }
+
+class StaffLoginForm(AuthenticationForm):
+    username = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={"class": "form-control"}))

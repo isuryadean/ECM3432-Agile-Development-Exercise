@@ -4,7 +4,12 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Submit a Complaint</h2>
+
+    {% if success %}
+        <div class="alert alert-success mt-3">Your complaint has been submitted successfully!</div>
+    {% endif %}
+    
+    <h2>Submit an Issue</h2>
     <p>Please fill out the form below to submit a complaint to the council.</p>
 
     <form method="POST" class="needs-validation" novalidate>
@@ -105,6 +110,9 @@
     function setLocation(position) {
         var latitude = position.coords.latitude;
         var longitude = position.coords.longitude;
+
+        latitude = Number(latitude.toFixed(5))
+        longitude = Number(longitude.toFixed(5))
         
         document.getElementById("id_latitude").value = latitude;
         document.getElementById("id_longitude").value = longitude;
@@ -112,8 +120,7 @@
         console.log(typeof(latitude))
         console.log(latitude)
         
-        latitude = Number(latitude.toFixed(5))
-        longitude = Number(longitude.toFixed(5))
+        
 
         console.log(typeof(latitude))
         console.log(latitude)
@@ -146,8 +153,13 @@
         var latitude = e.latlng.lat;
         var longitude = e.latlng.lng;
 
+        latitude = Number(latitude.toFixed(5))
+        longitude = Number(longitude.toFixed(5))
+
         document.getElementById("id_latitude").value = latitude;
         document.getElementById("id_longitude").value = longitude;
+
+        
 
         if (marker) {
             map.removeLayer(marker);

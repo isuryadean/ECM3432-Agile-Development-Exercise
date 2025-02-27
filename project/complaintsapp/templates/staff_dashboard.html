@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Staff Dashboard</h2>
+    <p>Welcome, {{ request.user.username }}! Here are the submitted complaints:</p>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Subcategory</th>
+                <th>Location</th>
+                <th>Description</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for complaint in complaints %}
+            <tr>
+                <td>{{ complaint.id }}</td>
+                <td>{{ complaint.name }}</td>
+                <td>{{ complaint.category }}</td>
+                <td>{{ complaint.subcategory }}</td>
+                <td>{{ complaint.location }}</td>
+                <td>{{ complaint.issue_description }}</td>
+                <td>{{ complaint.submitted_at }}</td>
+                <td>
+                    <button class="btn btn-info btn-sm" data-bs-toggle="collapse" data-bs-target="#actions-{{ complaint.id }}">
+                        Show Actions
+                    </button>
+                </td>
+            </tr>
+            <tr id="actions-{{ complaint.id }}" class="collapse">
+                <td colspan="8">
+                    <div class="p-3">
+                        <p><strong>Full Complaint:</strong> {{ complaint.complaint_text }}</p>
+                        <a href="{% url 'verify_complaint' complaint.id %}" class="btn btn-success">Verify</a>
+                        <a href="{% url 'dismiss_complaint' complaint.id %}" class="btn btn-danger">Dismiss</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No complaints have been submitted yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'staff_logout' %}" class="btn btn-danger">Logout</a>
+</div>
+
+<!-- Bootstrap Collapse Script -->
+<script>
+    document.querySelectorAll('.clickable-row').forEach(row => {
+        row.addEventListener('click', function() {
+            let target = this.getAttribute("data-bs-target");
+            document.querySelector(target).classList.toggle("show");
+        });
+    });
+    </script>
+{% endblock %}

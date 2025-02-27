@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 
 # Create your models here.
 
@@ -126,5 +127,13 @@ class SubmittedIssue(models.Model):
 
     def __str__(self):
         return f"Complaint by {self.name} - {self.submitted_at}"
+    
+class ActiveIssue(models.Model):
+    complaint = models.OneToOneField("SubmittedIssue", on_delete=models.CASCADE)
+    verified_by = models.ForeignKey("auth.User", on_delete=models.SET_NULL, null=True)
+    verified_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Verified: {self.complaint.category} - {self.complaint.subcategory} ({self.complaint.name})"
 
 
