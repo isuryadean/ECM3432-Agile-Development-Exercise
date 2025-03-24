@@ -68,21 +68,25 @@ def is_staff(user):
 @user_passes_test(is_staff)
 def staff_dashboard(request):
     complaints = SubmittedIssue.objects.all().order_by("-submitted_at")  # Fetch complaints
-    return render(request, "staff_dashboard.html", {"complaints": complaints})
+    active_issues = ActiveIssue.objects.all()
+    return render(request, "staff_dashboard.html", {
+        "complaints": complaints,
+        "active_issues": active_issues,})
 
 @login_required
 @user_passes_test(is_staff)
 def verify_complaint(request, complaint_id):
     complaint = get_object_or_404(SubmittedIssue, id=complaint_id)
 
-    # Move complaint to ActiveIssue
-    ActiveIssue.objects.create(complaint=complaint, verified_by=request.user)
+    active_issue, created = ActiveIssue.objects.get_or_create(
+        complaint=complaint,
+        defaults={"verified_by": request.user}  # Only set verified_by when first created
+    )
 
-    # Delete from original complaints
-    complaint.delete()
+    if created:  # Only delete complaint if a new ActiveIssue was created
+        complaint.delete()
 
     return redirect("staff_dashboard")
-
 @login_required
 @user_passes_test(is_staff)
 def dismiss_complaint(request, complaint_id):

@@ -49,6 +49,35 @@
             {% endfor %}
         </tbody>
     </table>
+    <h3>Active Issues</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Category</th>
+                <th>Subcategory</th>
+                <th>Location</th>
+                <th>Verified By</th>
+                <th>Verified At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for issue in active_issues %}
+            <tr>
+                <td>{{ issue.id }}</td>
+                <td>{{ issue.complaint.category }}</td>
+                <td>{{ issue.complaint.subcategory }}</td>
+                <td>{{ issue.complaint.location }}</td>
+                <td>{{ issue.verified_by.username }}</td>
+                <td>{{ issue.verified_at }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No active issues yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     <a href="{% url 'staff_logout' %}" class="btn btn-danger">Logout</a>
 </div>
@@ -61,5 +90,18 @@
             document.querySelector(target).classList.toggle("show");
         });
     });
-    </script>
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".verify-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                setTimeout(() => {
+                    location.reload();
+                }, 500); // Reload after 500ms
+            });
+        });
+    });
+</script>
+
 {% endblock %}
